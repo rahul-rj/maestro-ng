@@ -65,11 +65,18 @@ class TCPPortPinger(RetryingLifecycleHelper):
 
     def _test(self, container=None):
         try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(1)
-            s.connect((self.host, self.port))
-            s.close()
-            return True
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(1)
+                s.connect((self.host, self.port))
+                s.close()
+                return True
+            except socket.gaierror:
+                s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+                s.settimeout(1)
+                s.connect((self.host.replace('[','').replace(']',''), self.port))
+                s.close()
+                return True
         except Exception:
             return False
 
