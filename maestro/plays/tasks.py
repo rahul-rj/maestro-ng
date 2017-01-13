@@ -8,6 +8,8 @@ from __future__ import print_function
 import collections
 import json
 import time
+from docker import auth
+import os
 try:
     import urlparse
 except ImportError:
@@ -358,8 +360,22 @@ class LoginTask(Task):
     def _run(self):
         registry = LoginTask.registry_for_container(self.container,
                                                     self._registries)
-        if not registry or not registry['username']:
+        if not registry:
             return
+
+        if 'username' not in registry or not registry['username']:
+            dockercfg_path = os.path.expanduser(os.path.join('~/.docker', 'config.json'))
+            if dockercfg_path and os.path.exists(dockercfg_path):
+                auth_configs = auth.load_config(dockercfg_path)
+                authcfg = auth.resolve_authconfig(auth_configs, registry['registry'])
+                username = authcfg.get('username', None)
+                if username:
+                    registry['username'] = username
+                else:
+                    raise Exception("Missing login credentials for registry {}".format(registry['registry']))
+
+        if 'username' not in registry:
+            raise Exception("Missing login credentials for registry {}".format(registry['registry']))
 
         self.o.reset()
         self.o.pending('logging in to {}...'.format(registry['registry']))
