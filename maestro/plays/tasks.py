@@ -372,10 +372,24 @@ class LoginTask(Task):
                 if username:
                     registry['username'] = username
                 else:
-                    raise Exception("Missing login credentials for registry {}".format(registry['registry']))
+                    raise Exception("Missing login (username) credentials for registry {}".format(registry['registry']))
+
+        if 'password' not in registry or not registry['password']:
+            dockercfg_path = os.path.expanduser(os.path.join('/root/.docker', 'config.json'))
+            if dockercfg_path and os.path.exists(dockercfg_path):
+                auth_configs = auth.load_config(dockercfg_path)
+                authcfg = auth.resolve_authconfig(auth_configs, registry['registry'])
+                username = authcfg.get('password', None)
+                if username:
+                    registry['password'] = username
+                else:
+                    raise Exception("Missing login (password) credentials for registry {}".format(registry['registry']))
 
         if 'username' not in registry:
-            raise Exception("Missing login credentials for registry {}".format(registry['registry']))
+            raise Exception("Missing username for registry {}".format(registry['registry']))
+
+        if 'password' not in registry:
+            raise Exception("Missing password for registry {}".format(registry['registry']))
 
         self.o.reset()
         self.o.pending('logging in to {}...'.format(registry['registry']))
