@@ -139,11 +139,14 @@ class Ship(Entity):
                     ca_cert = tls_ca_cert,
                     ssl_version = ssl_version)
 
-        self._backend = docker.Client(
-            base_url=self._backend_url,
-            version=str(api_version or Ship.DEFAULT_API_VERSION),
-            timeout=timeout or Ship.DEFAULT_DOCKER_TIMEOUT,
-            tls=self._tls)
+        try:
+            self._backend = docker.Client(
+                base_url=self._backend_url,
+                version=str(api_version or Ship.DEFAULT_API_VERSION),
+                timeout=timeout or Ship.DEFAULT_DOCKER_TIMEOUT,
+                tls=self._tls)
+        except Exception as e:
+            self._backend = None
 
     @property
     def ip(self):
