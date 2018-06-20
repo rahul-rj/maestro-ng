@@ -430,7 +430,7 @@ class Container(Entity):
             self.dns = [self.dns]
 
         # Stop timeout
-        self.stop_timeout = config.get('stop_timeout', 10)
+        self.stop_timeout = config.get('stop_timeout', 20)
 
         # Get limits
         limits = dict(self.service.limits, **config.get('limits', {}))
